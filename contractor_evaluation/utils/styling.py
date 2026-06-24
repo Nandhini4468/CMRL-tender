@@ -155,29 +155,64 @@ def apply_portal_styling():
             color: #ffffff !important;
         }
 
-        /* ── Sidebar collapse/expand arrow button ── */
+        /* ── Sidebar collapse/expand button — pure CSS arrow, no font needed ── */
         [data-testid="collapsedControl"] {
             background-color: #1565c0 !important;
             border-radius: 0 8px 8px 0 !important;
-            color: #ffffff !important;
         }
         [data-testid="collapsedControl"] svg {
             fill: #ffffff !important;
         }
-        /* Ensure Material Symbols font is applied so icons render as glyphs not text */
-        .material-symbols-rounded {
-            font-family: 'Material Symbols Rounded' !important;
-            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+
+        /* Hide the raw "keyboard_double_arrow_..." text that shows when font fails */
+        header span.material-symbols-rounded,
+        header span[class*="material"],
+        [data-testid="collapsedControl"] span {
+            font-size: 0 !important;
+            color: transparent !important;
+            display: inline-block !important;
+            width: 20px !important;
+            height: 20px !important;
+            position: relative !important;
         }
-        .material-icons {
-            font-family: 'Material Icons' !important;
+
+        /* Inject a real CSS arrow in place of the missing icon glyph */
+        header span.material-symbols-rounded::before,
+        header span[class*="material"]::before {
+            content: "❮❮" !important;
+            font-size: 14px !important;
+            font-family: Arial, sans-serif !important;
+            color: #444444 !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            line-height: 1 !important;
         }
-        /* Fix any span showing icon name as text */
-        [data-testid="collapsedControl"] span,
-        button[kind="header"] span {
-            font-family: 'Material Symbols Rounded', 'Material Icons' !important;
-            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        [data-testid="collapsedControl"] span::before {
+            content: "❯❯" !important;
+            font-size: 14px !important;
+            font-family: Arial, sans-serif !important;
             color: #ffffff !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            line-height: 1 !important;
+        }
+
+        /* ── Groq API Key input — white box with blue text ── */
+        [data-testid="stSidebar"] input[type="password"],
+        [data-testid="stSidebar"] input[type="text"] {
+            background-color: #ffffff !important;
+            color: #1565c0 !important;
+            border: 2px solid rgba(255,255,255,0.6) !important;
+            border-radius: 6px !important;
+        }
+        [data-testid="stSidebar"] input[type="password"]::placeholder,
+        [data-testid="stSidebar"] input[type="text"]::placeholder {
+            color: #1565c0 !important;
+            opacity: 0.75 !important;
         }
 
         /* ── Buttons ── */
