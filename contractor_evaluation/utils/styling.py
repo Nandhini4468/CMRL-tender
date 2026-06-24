@@ -2,32 +2,8 @@ import streamlit as st
 
 
 def apply_portal_styling():
-    # Fix Material icon names showing as text — JS directly replaces the text content
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <script>
-        (function() {
-            function fixIconText() {
-                document.querySelectorAll('span').forEach(function(span) {
-                    if (span.childElementCount === 0) {
-                        var t = span.textContent.trim();
-                        if (t === 'keyboard_double_arrow_left' || t === 'keyboard_arrow_left') {
-                            span.textContent = '❮❮';
-                            span.style.fontFamily = 'Arial, sans-serif';
-                            span.style.fontSize = '16px';
-                        } else if (t === 'keyboard_double_arrow_right' || t === 'keyboard_arrow_right') {
-                            span.textContent = '❯❯';
-                            span.style.fontFamily = 'Arial, sans-serif';
-                            span.style.fontSize = '16px';
-                        }
-                    }
-                });
-            }
-            fixIconText();
-            var observer = new MutationObserver(fixIconText);
-            observer.observe(document.documentElement, { childList: true, subtree: true });
-        })();
-        </script>
     """, unsafe_allow_html=True)
 
     st.markdown(
@@ -182,45 +158,54 @@ def apply_portal_styling():
             border-radius: 0 8px 8px 0 !important;
         }
 
-        /* Hide the icon name text (shows when Material Symbols font fails to load) */
+        /* Step 1: hide the raw icon-name text while keeping element size */
         span.material-symbols-rounded,
         span.material-symbols-outlined,
+        span.material-symbols-sharp,
         span[class*="material-symbols"] {
-            font-size: 0 !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
+            visibility: hidden !important;
+            position: relative !important;
+            display: inline-block !important;
             width: 24px !important;
             height: 24px !important;
-            overflow: hidden !important;
+            line-height: 24px !important;
         }
 
-        /* Replace with SVG double-left arrow for header collapse button */
+        /* Step 2: inject visible «« arrow on collapse button (in header) */
         header span.material-symbols-rounded::before,
         header span.material-symbols-outlined::before,
+        header span.material-symbols-sharp::before,
         header span[class*="material-symbols"]::before {
-            content: "" !important;
-            display: inline-block !important;
-            width: 22px !important;
-            height: 22px !important;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23555555'%3E%3Cpath d='M17.59 18L19 16.59 14.42 12 19 7.41 17.59 6l-6 6z'/%3E%3Cpath d='M11 18l1.41-1.41L7.83 12l4.58-4.59L11 6l-6 6z'/%3E%3C/svg%3E") !important;
-            background-repeat: no-repeat !important;
-            background-position: center !important;
-            background-size: contain !important;
+            content: "«" !important;
+            visibility: visible !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            font-size: 22px !important;
+            font-weight: 700 !important;
+            font-family: Arial, sans-serif !important;
+            color: #333333 !important;
+            line-height: 1 !important;
         }
 
-        /* Replace with SVG double-right arrow for sidebar expand button */
+        /* Step 3: inject visible »» arrow on expand button (collapsedControl) */
         [data-testid="collapsedControl"] span.material-symbols-rounded::before,
         [data-testid="collapsedControl"] span.material-symbols-outlined::before,
-        [data-testid="collapsedControl"] span[class*="material-symbols"]::before {
-            content: "" !important;
-            display: inline-block !important;
-            width: 22px !important;
-            height: 22px !important;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M6.41 6L5 7.41 9.58 12 5 16.59 6.41 18l6-6z'/%3E%3Cpath d='M13 6l-1.41 1.41L16.17 12l-4.58 4.59L13 18l6-6z'/%3E%3C/svg%3E") !important;
-            background-repeat: no-repeat !important;
-            background-position: center !important;
-            background-size: contain !important;
+        [data-testid="collapsedControl"] span.material-symbols-sharp::before,
+        [data-testid="collapsedControl"] span[class*="material-symbols"]::before,
+        [data-testid="collapsedControl"] span::before {
+            content: "»" !important;
+            visibility: visible !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            font-size: 22px !important;
+            font-weight: 700 !important;
+            font-family: Arial, sans-serif !important;
+            color: #ffffff !important;
+            line-height: 1 !important;
         }
 
         /* ── Groq API Key input — white box with blue text ── */
