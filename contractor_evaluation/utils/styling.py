@@ -27,9 +27,12 @@ def apply_portal_styling():
                             } else if (t === 'keyboard_double_arrow_right' || t === 'keyboard_arrow_right') {
                                 span.textContent = '❯❯';
                                 span.style.fontFamily = 'Arial, sans-serif';
-                                span.style.fontSize = '18px';
-                                span.style.color = '#1565c0';
+                                span.style.fontSize = '16px';
+                                span.style.color = '#ffffff';
                                 span.style.fontWeight = '900';
+                                span.style.backgroundColor = '#000000';
+                                span.style.borderRadius = '4px';
+                                span.style.padding = '2px 4px';
                             }
                         }
                     });
