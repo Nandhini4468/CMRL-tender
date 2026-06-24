@@ -6,6 +6,7 @@ from utils.styling import apply_portal_styling
 from utils.config import TESSERACT_CMD, CHROMA_PERSIST_DIR, EMBEDDING_MODEL, BIDDERS_DIR
 from utils.file_utils import get_bidder_folders, save_uploaded_folder
 from core.ocr.ocr_pipeline import extract_all_bidder_docs
+from core.ocr.ocr_cache import CACHE_DIR, _file_md5
 from core.rag.retriever import BidderRetriever
 
 st.set_page_config(page_title="Step 3 — Bidder Processing", page_icon="🚇", layout="wide")
@@ -40,6 +41,24 @@ with st.sidebar:
             st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB). This may take a few minutes.")
         except ImportError:
             st.warning("Unlimited-OCR requires torch/transformers which are not available in this environment. It will be skipped automatically.")
+
+# ── Detect engine change and clear cache ─────────────────────────────────────
+current_engines = sorted(engines)
+last_engines = st.session_state.get("last_bidder_ocr_engines", [])
+if current_engines != last_engines and st.session_state.get("bidders_processed"):
+    cleared = 0
+    for bidder in st.session_state.get("bidder_folders", []):
+        for f in bidder.get("files", []):
+            try:
+                cache_file = CACHE_DIR / f"{_file_md5(f['path'])}.json"
+                if cache_file.exists():
+                    cache_file.unlink()
+                    cleared += 1
+            except Exception:
+                pass
+    st.session_state["last_bidder_ocr_engines"] = current_engines
+    if cleared:
+        st.info(f"OCR engine selection changed — cleared {cleared} cached file(s). Documents will be re-processed with the new engine.")
 
 # ── Input method ─────────────────────────────────────────────────────────────
 input_method = st.radio("How would you like to provide bidder documents?", [
@@ -144,6 +163,7 @@ if bidders:
         st.session_state["bidder_index_status"] = bidder_index_status
         st.session_state["bidders_processed"] = True
         st.session_state["bidders_evaluated_count"] = len(bidders)
+        st.session_state["last_bidder_ocr_engines"] = sorted(engines)
 
         st.success("All bidder documents processed and indexed. Proceed to Step 4.")
         import pandas as pd

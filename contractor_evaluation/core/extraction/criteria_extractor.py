@@ -53,6 +53,13 @@ CRITICAL RULES:
 5. If the same criterion appears in multiple places (summary + detail), extract it ONLY ONCE.
 6. Do NOT include "Total" or summary rows.
 7. The sum of all maximum_score values must equal the document's stated total.
+8. STRICTLY DO NOT extract eligibility/qualification/pass-fail requirements such as:
+   - Registration, licenses, certifications required
+   - Minimum turnover/net worth thresholds
+   - PAN, GST, ESI, EPF, statutory registrations
+   - Mandatory document submissions
+   - Any requirement phrased as "shall possess", "must have", "mandatory", "minimum criteria"
+   These belong to eligibility criteria — NOT evaluation scoring criteria.
 
 Return a valid JSON array only. No explanation, no markdown, no preamble.
 Each object must have exactly these keys:
@@ -122,6 +129,8 @@ def _extract_section(llm: ChatGroq, system_prompt: str, text: str, section: str)
             df["criterion_number"] = df["criterion_number"].fillna("").astype(str).str.strip()
             # Remove parent criteria that have sub-criteria (e.g. remove "1" if "1.1" exists)
             df = _remove_parent_criteria(df)
+            # Remove any eligibility-type criteria that slipped into evaluation
+            df = _filter_out_eligibility_rows(df)
             # Deduplicate by criterion_description (case-insensitive)
             df["_key"] = df["criterion_description"].str.lower().str.strip()
             df = df.drop_duplicates(subset="_key").drop(columns=["_key"])
@@ -152,6 +161,30 @@ def _remove_parent_criteria(df: pd.DataFrame) -> pd.DataFrame:
         return df
 
     mask = df["criterion_number"].apply(lambda n: n not in parents_to_drop)
+    return df[mask].reset_index(drop=True)
+
+
+_ELIGIBILITY_KEYWORDS = [
+    "registration", "license", "licence", "certification", "pan ", "gst", "esi", "epf",
+    "shall possess", "must have", "mandatory", "minimum criteria", "pre-qualification",
+    "prequalification", "statutory", "turnover threshold", "net worth", "bid security",
+    "earnest money", "emd", "power of attorney", "blacklist", "debarred",
+]
+
+def _filter_out_eligibility_rows(df: pd.DataFrame) -> pd.DataFrame:
+    """Remove rows that are eligibility/pass-fail criteria, not scoring criteria."""
+    if df.empty:
+        return df
+
+    def _is_eligibility(row):
+        # Zero-score rows with eligibility keywords are pass/fail, not scoring
+        score = float(row.get("maximum_score", 0))
+        desc = str(row.get("criterion_description", "")).lower()
+        if score == 0:
+            return any(kw in desc for kw in _ELIGIBILITY_KEYWORDS)
+        return False
+
+    mask = df.apply(lambda row: not _is_eligibility(row), axis=1)
     return df[mask].reset_index(drop=True)
 
 

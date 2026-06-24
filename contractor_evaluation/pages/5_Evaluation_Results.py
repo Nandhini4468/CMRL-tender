@@ -25,20 +25,26 @@ with st.sidebar:
         st.session_state["groq_api_key"] = groq_key
 
 eval_df: pd.DataFrame = st.session_state.get("evaluation_df", pd.DataFrame())
-eligible_bidders: list = st.session_state.get("eligible_bidders", [])
 bidder_folders: list = st.session_state.get("bidder_folders", [])
+all_bidders: list = [b["name"] for b in bidder_folders]
+eligible_bidders: list = st.session_state.get("eligible_bidders", all_bidders)
 model = st.session_state.get("groq_model", GROQ_MODEL)
 
 if eval_df.empty:
     st.error("No evaluation criteria found. Return to Step 1.")
     st.stop()
 
-if not eligible_bidders:
-    st.warning("No eligible bidders to evaluate.")
+if not all_bidders:
+    st.warning("No bidders found. Complete Step 3 first.")
     st.stop()
 
-st.markdown(f"**{len(eligible_bidders)} eligible bidder(s)** will be evaluated against **{len(eval_df)} criteria**.")
+st.markdown(f"**{len(all_bidders)} bidder(s)** will be evaluated against **{len(eval_df)} criteria** (all bidders evaluated regardless of eligibility).")
 st.markdown("Criteria IDs: " + ", ".join(eval_df.get("criteria_id", pd.Series()).tolist()))
+
+# Show eligibility status as reference
+if eligible_bidders != all_bidders:
+    ineligible = [b for b in all_bidders if b not in eligible_bidders]
+    st.info(f"Note: {', '.join(ineligible)} did not pass eligibility but will still be scored.")
 
 col1, col2 = st.columns(2)
 with col1:
@@ -58,8 +64,8 @@ if st.button("Run Full Evaluation", type="primary"):
     progress = st.progress(0, text="Starting evaluation...")
     status_area = st.empty()
 
-    for i, bidder_name in enumerate(eligible_bidders):
-        progress.progress(i / len(eligible_bidders), text=f"Evaluating {bidder_name}...")
+    for i, bidder_name in enumerate(all_bidders):
+        progress.progress(i / len(all_bidders), text=f"Evaluating {bidder_name}...")
         status_area.info(f"Evaluating **{bidder_name}** — {len(eval_df)} criteria...")
 
         retriever = BidderRetriever(CHROMA_PERSIST_DIR, bidder_name, EMBEDDING_MODEL)

@@ -15,9 +15,7 @@ if not st.session_state.get("evaluation_done"):
     st.warning("Evaluation not complete. Please finish Steps 1–5 first.")
     st.stop()
 
-eligibility_df = st.session_state.get("eligibility_df", pd.DataFrame())
 evaluation_df = st.session_state.get("evaluation_df", pd.DataFrame())
-eligibility_summary_df = st.session_state.get("eligibility_summary", pd.DataFrame())
 scoring_df = st.session_state.get("scoring_df", pd.DataFrame())
 ranking_df = st.session_state.get("ranking_df", pd.DataFrame())
 audit_df = st.session_state.get("audit_df", pd.DataFrame())
@@ -43,16 +41,16 @@ if not ranking_df.empty:
 
 # ── Download full Excel report ────────────────────────────────────────────────
 st.markdown("---")
-st.markdown("### Download Full Excel Report")
-st.markdown("One workbook with all sheets: Eligibility Criteria, Evaluation Criteria, Eligibility Summary, Scoring Matrix, Rankings, Audit Trail, Low Confidence Flags.")
+st.markdown("### Download Full Evaluation Report")
+st.markdown("Sheets included: Evaluation Criteria, Scoring Matrix, Rankings, Audit Trail, Low Confidence Flags.")
 
 if st.button("Generate & Download Full Report", type="primary"):
     with st.spinner("Generating Excel workbook..."):
         excel_path = export_all_to_excel(
             str(OUTPUTS_DIR),
-            eligibility_df,
+            pd.DataFrame(),   # eligibility_df — excluded from report
             evaluation_df,
-            eligibility_summary_df,
+            pd.DataFrame(),   # eligibility_summary — excluded from report
             scoring_df,
             ranking_df,
             audit_df,
@@ -99,10 +97,6 @@ with col3:
     if not low_conf_df.empty:
         st.download_button("Low Confidence Flags", df_to_excel_bytes(low_conf_df, "LowConf"),
                            file_name="low_confidence.xlsx",
-                           mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    if not eligibility_summary_df.empty:
-        st.download_button("Eligibility Summary", df_to_excel_bytes(eligibility_summary_df, "Eligibility"),
-                           file_name="eligibility_summary.xlsx",
                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 # ── Audit preview ─────────────────────────────────────────────────────────────

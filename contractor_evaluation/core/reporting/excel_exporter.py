@@ -15,28 +15,23 @@ def export_all_to_excel(
     low_conf_df: pd.DataFrame,
 ) -> str:
     """
-    Write all DataFrames into a single timestamped Excel workbook.
+    Write evaluation-only results into a single timestamped Excel workbook.
+    Eligibility sheets are excluded — report covers scoring and rankings only.
     Returns the file path.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_path = Path(outputs_dir) / f"contractor_evaluation_{timestamp}.xlsx"
+    file_path = Path(outputs_dir) / f"evaluation_report_{timestamp}.xlsx"
 
     with pd.ExcelWriter(str(file_path), engine="xlsxwriter") as writer:
         wb = writer.book
 
-        # Styles
         header_fmt = wb.add_format({"bold": True, "bg_color": "#1F4E79", "font_color": "white",
                                      "border": 1, "align": "center", "valign": "vcenter", "text_wrap": True})
-        pass_fmt = wb.add_format({"bg_color": "#C6EFCE", "font_color": "#276221", "border": 1})
-        fail_fmt = wb.add_format({"bg_color": "#FFC7CE", "font_color": "#9C0006", "border": 1})
         low_conf_fmt = wb.add_format({"bg_color": "#FFEB9C", "font_color": "#9C5700", "border": 1})
         num_fmt = wb.add_format({"num_format": "0.00", "border": 1, "align": "center"})
         cell_fmt = wb.add_format({"border": 1, "text_wrap": True, "valign": "top"})
 
-        _write_sheet(writer, eligibility_df, "Eligibility Criteria", header_fmt, cell_fmt)
         _write_sheet(writer, evaluation_df, "Evaluation Criteria", header_fmt, cell_fmt)
-        _write_sheet(writer, eligibility_summary_df, "Eligibility Summary", header_fmt, cell_fmt,
-                     conditional_cols=["Overall Status"], pass_fmt=pass_fmt, fail_fmt=fail_fmt)
         _write_sheet(writer, scoring_df, "Scoring Matrix", header_fmt, num_fmt)
         _write_sheet(writer, ranking_df, "Rankings", header_fmt, cell_fmt)
         _write_sheet(writer, audit_df, "Audit Trail", header_fmt, cell_fmt,
