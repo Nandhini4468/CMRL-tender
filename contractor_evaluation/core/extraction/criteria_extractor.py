@@ -64,7 +64,8 @@ def extract_criteria_from_text(
     """
     llm = ChatGroq(api_key=groq_api_key, model_name=model, temperature=0)
 
-    text_chunk = ocr_text[:50000]
+    # ~20 000 chars ≈ 5 000 tokens — keeps well within Groq free-tier daily limits
+    text_chunk = ocr_text[:20000]
 
     eligibility_df, raw_elig = _extract_section(llm, ELIGIBILITY_SYSTEM, text_chunk, "eligibility")
     evaluation_df, raw_eval = _extract_section(llm, EVALUATION_SYSTEM, text_chunk, "evaluation")
@@ -85,6 +86,13 @@ def _extract_section(llm: ChatGroq, system_prompt: str, text: str, section: str)
         if not isinstance(data, list):
             data = []
     except Exception as e:
+        msg = str(e)
+        if "rate_limit_exceeded" in msg or "429" in msg:
+            raise RuntimeError(
+                f"Groq rate limit reached for this model. "
+                f"In the sidebar, switch the Groq Model to 'mixtral-8x7b-32768' or 'llama-3.1-8b-instant' "
+                f"(each model has its own separate daily quota). Original error: {e}"
+            ) from e
         raise RuntimeError(f"LLM extraction failed for '{section}': {e}") from e
 
     if section == "eligibility":
