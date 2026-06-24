@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+*.egg-info/
+
+# Streamlit secrets (add your key via the cloud dashboard instead)
+contractor_evaluation/.streamlit/secrets.toml
+
+# Generated outputs and caches (rebuilt at runtime)
+contractor_evaluation/data/outputs/
+contractor_evaluation/data/ocr_cache/
+contractor_evaluation/data/chroma_db/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,344 @@
+Contractor Evaluation Automation System
+
+Objective
+
+Build an end-to-end automated contractor evaluation system that:
+
+1. Reads and extracts evaluation criteria from a tender criteria(EQC Safety Audit) document using OCR.
+2. Converts the extracted criteria into a structured pandas DataFrame The excel must contain criteria and the points for each criteria extracted from the pdf.
+3. Allows user verification of the extracted criteria.
+4. Re-runs OCR extraction if the user indicates that some criteria are missing do this using another ai agent.
+5. Reads all bidder submissions from a master folder(say companies) containing separate folders for each bidder.
+6. Uses OCR + RAG to analyze all documents submitted by each bidder.
+7. Evaluates each bidder against the approved criteria.
+8. Assigns scores according to the scoring rules defined in the criteria document.
+9. Produce detailed scoring tables and final rankings using pandas dataframe.
+
+# Phase 1: Criteria Extraction
+
+Input
+A criteria/evaluation document (PDF, scanned PDF).
+
+Tasks
+OCR Processing(use multiple ocr libraries like Chandra, paddleOCR ,tesseract)
+Use llm or ai agent to analyse the extracted data and produce the output in proper grammar.
+create two excel such that the first one is the eligibility criteria , next is the evaluation criteria along with the points
+
+Eligibility Criteria:
+*S.No
+*criteria name
+*Criteria description
+*document required /supporting evidence 
+
+Evaluation criteria:
+*S.No
+* Criterion Description
+* Maximum Score
+* Supporting Evidence Required
+
+Build DataFrame
+
+Create a pandas DataFrame:
+
+|  criteria  id| Criterion Description | Max Score | Evidence Required    |
+| ------------ | --------------------- | --------- | -------------------- |
+|  C1          | Annual Turnover > $5M | 20        | Financial Statements |
+|  C2          | ISO Certification     | 10        | ISO Certificate      |
+
+---
+
+ Validation Step
+
+Display:
+
+"Please verify whether all criteria have been extracted correctly."
+
+Provide the extracted DataFrame.Allow the user to alter the excel like excluding a particular criteria, adding one.
+
+Wait for user confirmation.
+
+User can respond:
+
+* YES--->APPROVED
+* NO---->MISSING CRITERIA
+
+
+
+Re-extraction Logic
+
+If user indicates criteria are missing:
+
+1. Re-run OCR using:
+
+   * Higher OCR sensitivity
+   * Multi-pass extraction
+   * Table detection
+   * Header/footer removal
+   * Page-wise extraction
+
+2. Compare old and new results.
+
+3. Merge missing criteria.
+
+4. Regenerate DataFrame.
+
+5. Ask for confirmation again.
+
+Continue until user approves.
+
+Do not proceed to bidder evaluation until approval is received.
+
+
+Phase 2: Bidder Folder Processing
+
+#Input Folder Structure
+
+Master Folder/
+
+```
+Bidder_A/
+
+    file1.pdf
+
+    file2.pdf
+
+    file3.pdf
+
+Bidder_B/
+
+    file1.pdf
+
+    file2.pdf
+
+Bidder_C/
+
+    file1.pdf
+
+    file2.pdf
+```
+
+Each bidder folder represents one bidder.
+
+Folder name becomes bidder name.
+
+
+# Document Processing
+
+For every bidder:
+
+## OCR
+
+Read all documents:
+
+* PDF
+* Scanned PDF
+* Images
+* DOCX
+
+Extract text.
+
+Combine all extracted text.
+# RAG Pipeline
+
+Create vector embeddings.
+
+Chunk documents.
+
+Store:(use chromadb)
+
+* Chunk Text
+* Source File
+* Page Number
+* Metadata
+
+Use semantic search to retrieve evidence for every criterion.
+
+---
+Eligibility checking:
+check the eligibility then give a excel showing the eligibility status of each bidders if not eligible show the criteria they do not satisfy.
+
+if the bidder satisfy all the eligibility criteria then only start evalution.
+
+# Criterion Evaluation Logic
+
+For every approved criterion:
+
+Search bidder documents for evidence.
+
+Retrieve supporting chunks.
+
+Evaluate against criterion requirements.
+
+
+# Scoring Rules
+
+Apply scoring exactly as defined in the criteria document.
+
+Examples:
+
+### Binary Criteria
+
+If criterion met:
+
+Score = Max Score
+
+Else:
+
+Score = 0
+
+### Partial Scoring
+
+If criterion contains ranges:
+
+Example:
+
+Turnover > $10M = 20 points
+
+Turnover $5M–10M = 10 points
+
+Turnover < $5M = 0 points
+
+Apply accordingly.
+
+### Weighted Criteria
+
+Use weights specified in criteria document.
+
+---
+
+# Evidence Tracking
+
+For every awarded score store:
+
+* Evidence Text
+* Source File
+* Page Number
+* Explanation
+
+Example:
+
+Criterion: ISO Certification
+
+Score: 10
+
+Evidence:
+"ISO 9001:2015 Certificate"
+
+File:
+ISO_Certificate.pdf
+
+Page:
+3
+
+Reason:
+Valid ISO certification found.
+
+---
+
+# Detailed Scoring DataFrame
+
+Generate:
+
+| Bidder   | C1 | C2 | C3 | C4 | Total |
+| -------- | -- | -- | -- | -- | ----- |
+| Bidder A | 20 | 10 | 15 | 5  | 50    |
+| Bidder B | 15 | 10 | 10 | 5  | 40    |
+| Bidder C | 20 | 5  | 15 | 0  | 40    |
+
+Use actual criterion IDs as column names.
+
+---
+
+# Ranking DataFrame
+
+Generate:
+
+| Rank | Bidder   | Total Score |
+| ---- | -------- | ----------- |
+| 1    | Bidder A | 50          |
+| 2    | Bidder B | 40          |
+| 3    | Bidder C | 40          |
+
+Sort descending by Total Score.
+
+Handle ties appropriately.
+
+---
+
+# Detailed Audit Report
+
+Generate a second DataFrame:
+
+| Bidder | Criterion | Max Score | Awarded Score | Evidence | Source File | Page |
+| ------ | --------- | --------- | ------------- | -------- | ----------- | ---- |
+
+This must allow complete auditability.
+
+---
+
+# Confidence Scoring
+
+For each criterion evaluation calculate:
+
+* Retrieval Confidence
+* OCR Confidence
+* Evaluation Confidence
+
+Flag low-confidence evaluations (<70%).
+
+---
+
+# Missing Evidence Handling
+
+If evidence cannot be found:
+
+Score = 0
+
+Mark:
+
+"Evidence Not Found"
+
+Do not hallucinate evidence.
+
+Only score based on retrieved documents.
+
+---
+
+# Final Outputs
+
+Return:
+
+1. Approved Criteria DataFrame
+2. Bidder Scoring DataFrame
+3. Audit DataFrame
+4. Ranking DataFrame
+5. Low Confidence Flags
+6. Summary Report
+
+---
+
+# Technical Requirements
+
+Use:
+
+* OCR: Tesseract/Azure Form Recognizer/AWS Textract
+* Pandas
+* FAISS or ChromaDB
+* LangChain/LlamaIndex
+* Semantic RAG Retrieval
+* Citation Tracking
+* Multi-file Processing
+* Folder-level Bidder Detection
+
+---
+
+# Strict Rules
+
+* Never invent criteria.
+* Never invent evidence.
+* Never assign scores without evidence.
+* Always cite source file and page number.
+* Wait for user approval before bidder evaluation.
+* Preserve exact scoring methodology from the criteria document.
+* All outputs must be returned as pandas DataFrames.
+
