@@ -49,7 +49,19 @@ edited_eval = st.data_editor(
 )
 if not edited_eval.empty:
     total_score = pd.to_numeric(edited_eval.get("maximum_score", pd.Series([0])), errors="coerce").sum()
-    st.metric("Total Maximum Score", f"{total_score:.0f}")
+    expected_total = st.number_input(
+        "Expected total score from document (enter to validate)",
+        min_value=0, value=100, step=1,
+    )
+    col_m1, col_m2 = st.columns(2)
+    with col_m1:
+        st.metric("Total Maximum Score (extracted)", f"{total_score:.0f}")
+    with col_m2:
+        diff = int(total_score) - expected_total
+        if diff == 0:
+            st.success(f"Total matches expected ({expected_total})")
+        else:
+            st.error(f"Mismatch: extracted {int(total_score)}, expected {expected_total} (off by {diff:+d}). Edit the score cells above to fix.")
 
 st.markdown("---")
 st.markdown("### Are all criteria correctly extracted?")
