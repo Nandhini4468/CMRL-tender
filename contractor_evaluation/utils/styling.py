@@ -6,9 +6,10 @@ def apply_portal_styling():
         """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
         /* ── Global font & background ── */
-        html, body, [class*="css"], .stApp, .stMarkdown, p, li, span, label, div {
+        html, body, [class*="css"], .stApp, .stMarkdown, p, li {
             font-family: 'Inter', sans-serif !important;
         }
         .stApp {
@@ -60,7 +61,7 @@ def apply_portal_styling():
             font-size: 0.9rem !important;
         }
 
-        /* ── File uploader — keep default Streamlit styling, just fix color ── */
+        /* ── File uploader ── */
         .stFileUploader > label {
             color: #0a3d8f !important;
             font-weight: 600 !important;
@@ -73,6 +74,16 @@ def apply_portal_styling():
         }
         .stFileUploader [data-testid="stFileUploaderDropzone"] p {
             color: #1565c0 !important;
+        }
+        /* Hide the native browser file input button that causes "uploadUpload" */
+        .stFileUploader input[type="file"] {
+            opacity: 0 !important;
+            position: absolute !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        input[type="file"]::file-selector-button {
+            display: none !important;
         }
 
         /* ── Sidebar ── */
