@@ -9,7 +9,7 @@ from core.rag.retriever import BidderRetriever
 from core.evaluation.criterion_evaluator import evaluate_all_criteria
 from core.reporting.dataframe_builder import build_all_outputs
 
-st.set_page_config(page_title="Step 5 — Evaluation Results", layout="wide")
+st.set_page_config(page_title="Step 5 — Evaluation Results", page_icon="🚇", layout="wide")
 apply_portal_styling()
 st.title("Step 5: Bidder Evaluation & Scoring")
 

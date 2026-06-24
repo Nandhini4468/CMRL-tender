@@ -7,7 +7,7 @@ from utils.styling import apply_portal_styling
 from utils.config import OUTPUTS_DIR
 from core.reporting.excel_exporter import export_all_to_excel
 
-st.set_page_config(page_title="Step 6 — Reports", layout="wide")
+st.set_page_config(page_title="Step 6 — Reports", page_icon="🚇", layout="wide")
 apply_portal_styling()
 st.title("Step 6: Reports & Downloads")
 

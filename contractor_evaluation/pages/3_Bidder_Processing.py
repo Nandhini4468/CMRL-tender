@@ -8,7 +8,7 @@ from utils.file_utils import get_bidder_folders, save_uploaded_folder
 from core.ocr.ocr_pipeline import extract_all_bidder_docs
 from core.rag.retriever import BidderRetriever
 
-st.set_page_config(page_title="Step 3 — Bidder Processing", layout="wide")
+st.set_page_config(page_title="Step 3 — Bidder Processing", page_icon="🚇", layout="wide")
 apply_portal_styling()
 st.title("Step 3: Bidder Document Processing")
 

@@ -8,7 +8,7 @@ from utils.config import GROQ_MODEL, CHROMA_PERSIST_DIR, EMBEDDING_MODEL, OUTPUT
 from core.rag.retriever import BidderRetriever
 from core.evaluation.eligibility_checker import check_eligibility, build_eligibility_summary
 
-st.set_page_config(page_title="Step 4 — Eligibility Check", layout="wide")
+st.set_page_config(page_title="Step 4 — Eligibility Check", page_icon="🚇", layout="wide")
 apply_portal_styling()
 st.title("Step 4: Eligibility Check")
 st.markdown("Check whether each bidder satisfies all eligibility criteria before full evaluation.")

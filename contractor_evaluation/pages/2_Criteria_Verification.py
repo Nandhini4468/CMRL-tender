@@ -8,7 +8,7 @@ from utils.config import GROQ_MODEL, TESSERACT_CMD, OUTPUTS_DIR
 from core.extraction.reextractor import reextract_criteria
 from core.reporting.excel_exporter import export_criteria_to_excel
 
-st.set_page_config(page_title="Step 2 — Criteria Verification", layout="wide")
+st.set_page_config(page_title="Step 2 — Criteria Verification", page_icon="🚇", layout="wide")
 apply_portal_styling()
 st.title("Step 2: Criteria Verification & Approval")
 

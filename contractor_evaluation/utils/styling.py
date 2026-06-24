@@ -94,6 +94,10 @@ def apply_portal_styling():
         /* ── Sidebar navigation page links ── */
         [data-testid="stSidebarNav"] {
             background: transparent !important;
+            overflow: visible !important;
+        }
+        [data-testid="stSidebarNavItems"] {
+            overflow: visible !important;
         }
         [data-testid="stSidebarNavLink"] {
             color: #ffffff !important;
@@ -101,7 +105,8 @@ def apply_portal_styling():
             font-size: 0.95rem !important;
             font-weight: 500 !important;
             border-radius: 6px !important;
-            padding: 0.4rem 0.8rem !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
         [data-testid="stSidebarNavLink"]:hover {
             background-color: rgba(255,255,255,0.15) !important;
@@ -113,8 +118,11 @@ def apply_portal_styling():
             font-weight: 700 !important;
         }
         [data-testid="stSidebarNavLink"] span,
-        [data-testid="stSidebarNavLink"] p {
+        [data-testid="stSidebarNavLink"] p,
+        [data-testid="stSidebarNavLink"] div {
             color: #ffffff !important;
+            overflow: visible !important;
+            white-space: nowrap !important;
         }
 
         /* ── Sidebar text, labels, headers ── */

@@ -8,7 +8,7 @@ from utils.file_utils import save_uploaded_file
 from core.ocr.ocr_pipeline import run_ocr_pipeline
 from core.extraction.criteria_extractor import extract_criteria_from_text
 
-st.set_page_config(page_title="Step 1 — Criteria Extraction", layout="wide")
+st.set_page_config(page_title="Step 1 — Criteria Extraction", page_icon="🚇", layout="wide")
 apply_portal_styling()
 st.title("Step 1: Criteria Extraction")
 st.markdown("Upload the tender/EQC criteria document. The system will OCR and extract all eligibility and evaluation criteria.")
