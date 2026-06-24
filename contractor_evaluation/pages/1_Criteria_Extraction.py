@@ -16,6 +16,7 @@ st.markdown("Upload the tender/EQC criteria document. The system will OCR and ex
 # ── Sidebar config ──────────────────────────────────────────────────────────
 with st.sidebar:
     groq_key = st.text_input("Groq API Key", type="password",
+                              placeholder="Enter your Groq API key",
                               value=st.session_state.get("groq_api_key", GROQ_API_KEY))
     if groq_key:
         st.session_state["groq_api_key"] = groq_key

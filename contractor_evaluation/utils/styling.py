@@ -176,50 +176,51 @@ def apply_portal_styling():
             color: #ffffff !important;
         }
 
-        /* ── Sidebar collapse/expand button — pure CSS arrow, no font needed ── */
+        /* ── Sidebar collapse/expand button ── */
         [data-testid="collapsedControl"] {
             background-color: #1565c0 !important;
             border-radius: 0 8px 8px 0 !important;
         }
-        [data-testid="collapsedControl"] svg {
-            fill: #ffffff !important;
-        }
 
-        /* Hide the raw "keyboard_double_arrow_..." text that shows when font fails */
-        header span.material-symbols-rounded,
-        header span[class*="material"],
-        [data-testid="collapsedControl"] span {
+        /* Hide the icon name text (shows when Material Symbols font fails to load) */
+        span.material-symbols-rounded,
+        span.material-symbols-outlined,
+        span[class*="material-symbols"] {
             font-size: 0 !important;
-            color: transparent !important;
-            display: inline-block !important;
-            width: 20px !important;
-            height: 20px !important;
-            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 24px !important;
+            height: 24px !important;
+            overflow: hidden !important;
         }
 
-        /* Inject a real CSS arrow in place of the missing icon glyph */
+        /* Replace with SVG double-left arrow for header collapse button */
         header span.material-symbols-rounded::before,
-        header span[class*="material"]::before {
-            content: "❮❮" !important;
-            font-size: 14px !important;
-            font-family: Arial, sans-serif !important;
-            color: #444444 !important;
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            line-height: 1 !important;
+        header span.material-symbols-outlined::before,
+        header span[class*="material-symbols"]::before {
+            content: "" !important;
+            display: inline-block !important;
+            width: 22px !important;
+            height: 22px !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23555555'%3E%3Cpath d='M17.59 18L19 16.59 14.42 12 19 7.41 17.59 6l-6 6z'/%3E%3Cpath d='M11 18l1.41-1.41L7.83 12l4.58-4.59L11 6l-6 6z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            background-size: contain !important;
         }
-        [data-testid="collapsedControl"] span::before {
-            content: "❯❯" !important;
-            font-size: 14px !important;
-            font-family: Arial, sans-serif !important;
-            color: #ffffff !important;
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            line-height: 1 !important;
+
+        /* Replace with SVG double-right arrow for sidebar expand button */
+        [data-testid="collapsedControl"] span.material-symbols-rounded::before,
+        [data-testid="collapsedControl"] span.material-symbols-outlined::before,
+        [data-testid="collapsedControl"] span[class*="material-symbols"]::before {
+            content: "" !important;
+            display: inline-block !important;
+            width: 22px !important;
+            height: 22px !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M6.41 6L5 7.41 9.58 12 5 16.59 6.41 18l6-6z'/%3E%3Cpath d='M13 6l-1.41 1.41L16.17 12l-4.58 4.59L13 18l6-6z'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: center !important;
+            background-size: contain !important;
         }
 
         /* ── Groq API Key input — white box with blue text ── */

@@ -18,6 +18,7 @@ if not st.session_state.get("criteria_approved"):
 
 with st.sidebar:
     groq_key = st.text_input("Groq API Key", type="password",
+                              placeholder="Enter your Groq API key",
                               value=st.session_state.get("groq_api_key", ""))
     if groq_key:
         st.session_state["groq_api_key"] = groq_key
