@@ -158,54 +158,45 @@ def apply_portal_styling():
             border-radius: 0 8px 8px 0 !important;
         }
 
-        /* Step 1: hide the raw icon-name text while keeping element size */
+        /* Hide icon name text using transparent color — works even when font fails */
         span.material-symbols-rounded,
         span.material-symbols-outlined,
         span.material-symbols-sharp,
-        span[class*="material-symbols"] {
-            visibility: hidden !important;
+        span[class*="material-symbols"],
+        span[class*="Material"] {
+            color: transparent !important;
             position: relative !important;
             display: inline-block !important;
             width: 24px !important;
             height: 24px !important;
             line-height: 24px !important;
+            font-size: 20px !important;
         }
 
-        /* Step 2: inject visible «« arrow on collapse button (in header) */
-        header span.material-symbols-rounded::before,
-        header span.material-symbols-outlined::before,
-        header span.material-symbols-sharp::before,
-        header span[class*="material-symbols"]::before {
+        /* Show white « arrow icon on ALL material icon spans (collapse button) */
+        span.material-symbols-rounded::before,
+        span.material-symbols-outlined::before,
+        span.material-symbols-sharp::before,
+        span[class*="material-symbols"]::before,
+        span[class*="Material"]::before {
             content: "«" !important;
-            visibility: visible !important;
+            color: #ffffff !important;
             position: absolute !important;
             top: 50% !important;
             left: 50% !important;
             transform: translate(-50%, -50%) !important;
             font-size: 22px !important;
-            font-weight: 700 !important;
+            font-weight: 900 !important;
             font-family: Arial, sans-serif !important;
-            color: #333333 !important;
             line-height: 1 !important;
         }
 
-        /* Step 3: inject visible »» arrow on expand button (collapsedControl) */
+        /* Override to show white » for the expand button (sidebar collapsed) */
+        [data-testid="collapsedControl"] span::before,
         [data-testid="collapsedControl"] span.material-symbols-rounded::before,
-        [data-testid="collapsedControl"] span.material-symbols-outlined::before,
-        [data-testid="collapsedControl"] span.material-symbols-sharp::before,
-        [data-testid="collapsedControl"] span[class*="material-symbols"]::before,
-        [data-testid="collapsedControl"] span::before {
+        [data-testid="collapsedControl"] span[class*="material-symbols"]::before {
             content: "»" !important;
-            visibility: visible !important;
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            font-size: 22px !important;
-            font-weight: 700 !important;
-            font-family: Arial, sans-serif !important;
             color: #ffffff !important;
-            line-height: 1 !important;
         }
 
         /* ── Groq API Key input — white box with blue text ── */
