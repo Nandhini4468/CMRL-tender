@@ -73,6 +73,18 @@ If no scoring/evaluation criteria with marks are found, return [].
 """
 
 
+# Per-model safe chunk sizes (chars). Two calls are made per run (eligibility + evaluation),
+# so each must stay within the model's per-request token budget.
+# llama-3.1-8b-instant free tier: 6000 TPM → ~2000 tokens per call → ~8000 chars
+_MODEL_CHUNK_SIZES = {
+    "llama-3.1-8b-instant": 8000,
+    "mixtral-8x7b-32768":   20000,
+    "llama-3.1-70b-versatile": 20000,
+    "llama-3.3-70b-versatile": 20000,
+}
+_DEFAULT_CHUNK_SIZE = 14000
+
+
 def extract_criteria_from_text(
     ocr_text: str, groq_api_key: str, model: str
 ) -> Tuple[pd.DataFrame, pd.DataFrame, str, str]:
@@ -82,8 +94,8 @@ def extract_criteria_from_text(
     """
     llm = ChatGroq(api_key=groq_api_key, model_name=model, temperature=0)
 
-    # ~20 000 chars ≈ 5 000 tokens — keeps well within Groq free-tier daily limits
-    text_chunk = ocr_text[:20000]
+    chunk_size = _MODEL_CHUNK_SIZES.get(model, _DEFAULT_CHUNK_SIZE)
+    text_chunk = ocr_text[:chunk_size]
 
     eligibility_df, raw_elig = _extract_section(llm, ELIGIBILITY_SYSTEM, text_chunk, "eligibility")
     evaluation_df, raw_eval = _extract_section(llm, EVALUATION_SYSTEM, text_chunk, "evaluation")
@@ -105,11 +117,17 @@ def _extract_section(llm: ChatGroq, system_prompt: str, text: str, section: str)
             data = []
     except Exception as e:
         msg = str(e)
+        if "413" in msg or ("rate_limit_exceeded" in msg and "tokens" in msg):
+            raise RuntimeError(
+                f"Request too large for this model's token limit. "
+                f"Switch to 'llama-3.3-70b-versatile' or 'mixtral-8x7b-32768' in the sidebar (higher token limits). "
+                f"Original error: {e}"
+            ) from e
         if "rate_limit_exceeded" in msg or "429" in msg:
             raise RuntimeError(
-                f"Groq rate limit reached for this model. "
-                f"In the sidebar, switch the Groq Model to 'mixtral-8x7b-32768' or 'llama-3.1-8b-instant' "
-                f"(each model has its own separate daily quota). Original error: {e}"
+                f"Groq daily quota reached for this model. "
+                f"Switch to a different model in the sidebar — each model has its own separate daily quota. "
+                f"Original error: {e}"
             ) from e
         raise RuntimeError(f"LLM extraction failed for '{section}': {e}") from e
 
