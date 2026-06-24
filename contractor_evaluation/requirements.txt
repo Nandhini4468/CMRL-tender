@@ -33,6 +33,7 @@ python-dotenv>=1.0.0
 pydantic>=2.0.0
 tqdm>=4.66.0
 
-# Baidu Unlimited-OCR (HuggingFace)
-transformers>=4.40.0
-accelerate>=0.30.0
+# Baidu Unlimited-OCR (HuggingFace) — install manually for local use only
+# torch, torchvision, transformers, accelerate are NOT listed here because
+# they are incompatible with Streamlit Cloud (Python 3.14 / memory limits).
+# Install locally with: pip install torch torchvision transformers accelerate

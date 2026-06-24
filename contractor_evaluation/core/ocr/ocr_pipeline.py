@@ -5,7 +5,6 @@ import docx
 
 from core.ocr.pymupdf_ocr import extract_text_pymupdf
 from core.ocr.tesseract_ocr import extract_text_tesseract, extract_text_tesseract_highsens, configure_tesseract
-from core.ocr.unlimited_ocr import extract_text_unlimited_ocr
 from core.ocr.ocr_cache import get_cached, save_cache
 
 # Pages with fewer characters than this are treated as scanned/image pages
@@ -69,10 +68,14 @@ def run_ocr_pipeline(
     # Step 3b: Run Baidu Unlimited-OCR on scanned pages (if selected)
     unlimited_page_map: Dict[int, Dict] = {}
     if "unlimited_ocr" in use_engines and scanned_page_nums:
-        unlimited_results = extract_text_unlimited_ocr(file_path)
-        for r in unlimited_results:
-            if r["page"] in scanned_page_nums:
-                unlimited_page_map[r["page"]] = r
+        try:
+            from core.ocr.unlimited_ocr import extract_text_unlimited_ocr
+            unlimited_results = extract_text_unlimited_ocr(file_path)
+            for r in unlimited_results:
+                if r["page"] in scanned_page_nums:
+                    unlimited_page_map[r["page"]] = r
+        except ImportError:
+            pass  # torch/transformers not installed; skip silently
 
     # Step 4: Fuse — prefer PyMuPDF for text-rich pages, best OCR for scanned
     fused_pages = []

@@ -34,7 +34,11 @@ with st.sidebar:
         help="PyMuPDF is fast for digital PDFs. Tesseract handles scanned pages. Unlimited-OCR gives best accuracy on complex scanned documents.",
     )
     if "unlimited_ocr" in engines:
-        st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB).")
+        try:
+            import torch  # noqa: F401
+            st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB).")
+        except ImportError:
+            st.warning("Unlimited-OCR requires torch/transformers which are not available in this environment. It will be skipped automatically.")
     dpi = st.slider("OCR DPI (for scanned PDFs)", 150, 600, 300, step=50)
 
 # ── Upload ───────────────────────────────────────────────────────────────────

@@ -35,7 +35,11 @@ with st.sidebar:
         help="unlimited_ocr = Baidu Unlimited-OCR (AI model, slower but more accurate on complex scans)",
     )
     if "unlimited_ocr" in engines:
-        st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB). This may take a few minutes.")
+        try:
+            import torch  # noqa: F401
+            st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB). This may take a few minutes.")
+        except ImportError:
+            st.warning("Unlimited-OCR requires torch/transformers which are not available in this environment. It will be skipped automatically.")
 
 # ── Input method ─────────────────────────────────────────────────────────────
 input_method = st.radio("How would you like to provide bidder documents?", [
