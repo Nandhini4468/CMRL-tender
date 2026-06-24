@@ -1,37 +1,45 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 def apply_portal_styling():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
+
+    # Use components.html so the script actually executes on Streamlit Cloud.
+    # window.parent.document accesses the main page DOM from the iframe.
+    components.html("""
         <script>
         (function() {
             function fixIconText() {
-                document.querySelectorAll('span').forEach(function(span) {
-                    if (span.childElementCount === 0) {
-                        var t = span.textContent.trim();
-                        if (t === 'keyboard_double_arrow_left' || t === 'keyboard_arrow_left') {
-                            span.textContent = '❮❮';
-                            span.style.fontFamily = 'Arial, sans-serif';
-                            span.style.fontSize = '18px';
-                            span.style.color = '#ffffff';
-                            span.style.fontWeight = '900';
-                        } else if (t === 'keyboard_double_arrow_right' || t === 'keyboard_arrow_right') {
-                            span.textContent = '❯❯';
-                            span.style.fontFamily = 'Arial, sans-serif';
-                            span.style.fontSize = '18px';
-                            span.style.color = '#ffffff';
-                            span.style.fontWeight = '900';
+                try {
+                    var doc = window.parent.document;
+                    doc.querySelectorAll('span').forEach(function(span) {
+                        if (span.childElementCount === 0) {
+                            var t = span.textContent.trim();
+                            if (t === 'keyboard_double_arrow_left' || t === 'keyboard_arrow_left') {
+                                span.textContent = '❮❮';
+                                span.style.fontFamily = 'Arial, sans-serif';
+                                span.style.fontSize = '18px';
+                                span.style.color = '#ffffff';
+                                span.style.fontWeight = '900';
+                            } else if (t === 'keyboard_double_arrow_right' || t === 'keyboard_arrow_right') {
+                                span.textContent = '❯❯';
+                                span.style.fontFamily = 'Arial, sans-serif';
+                                span.style.fontSize = '18px';
+                                span.style.color = '#ffffff';
+                                span.style.fontWeight = '900';
+                            }
                         }
-                    }
-                });
+                    });
+                } catch(e) {}
             }
             fixIconText();
-            var observer = new MutationObserver(fixIconText);
-            observer.observe(document.documentElement, { childList: true, subtree: true });
+            setInterval(fixIconText, 300);
         })();
         </script>
-    """, unsafe_allow_html=True)
+    """, height=0)
 
     st.markdown(
         """
