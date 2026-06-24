@@ -26,8 +26,14 @@ with st.sidebar:
     ], index=0)
     st.session_state["groq_model"] = model
 
-    engines = st.multiselect("OCR Engines", ["pymupdf", "tesseract"],
-                              default=["pymupdf", "tesseract"])
+    engines = st.multiselect(
+        "OCR Engines",
+        ["pymupdf", "tesseract", "unlimited_ocr"],
+        default=["pymupdf", "tesseract"],
+        help="unlimited_ocr = Baidu AI-OCR (best for scanned/complex PDFs, downloads ~1-2 GB on first use)",
+    )
+    if "unlimited_ocr" in engines:
+        st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB).")
     dpi = st.slider("OCR DPI (for scanned PDFs)", 150, 600, 300, step=50)
 
 # ── Upload ───────────────────────────────────────────────────────────────────
@@ -48,14 +54,17 @@ if uploaded:
     if st.button("Run OCR + Extract Criteria", type="primary"):
         # ── OCR ─────────────────────────────────────────────────────────────
         with st.spinner("Running multi-engine OCR... this may take a minute for scanned PDFs."):
-            ocr_result = run_ocr_pipeline(file_path, TESSERACT_CMD, use_engines=engines)
+            ocr_result = run_ocr_pipeline(file_path, TESSERACT_CMD, use_engines=engines, dpi=dpi)
 
         total_chars = len(ocr_result["full_text"])
         st.info(f"OCR complete: {ocr_result['total_pages']} pages, ~{total_chars} characters extracted. "
                 f"Average confidence: {ocr_result['avg_confidence']}%")
 
-        if total_chars < 100:
-            st.warning("Very little text extracted. Try enabling more OCR engines or use a higher DPI.")
+        if total_chars < 200:
+            st.warning(
+                "Very little text extracted — the PDF may be scanned/image-based. "
+                "Try: enable **tesseract** engine, increase DPI to 400+, or enable **unlimited_ocr** for AI-powered extraction."
+            )
 
         with st.expander("Preview extracted raw text"):
             st.text(ocr_result["full_text"][:3000] + ("..." if total_chars > 3000 else ""))

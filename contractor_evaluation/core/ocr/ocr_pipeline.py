@@ -18,6 +18,7 @@ def run_ocr_pipeline(
     use_engines: Optional[List[str]] = None,
     high_sensitivity: bool = False,
     use_cache: bool = True,
+    dpi: int = 300,
 ) -> Dict:
     """
     Smart multi-engine OCR with caching.
@@ -58,9 +59,9 @@ def run_ocr_pipeline(
     tesseract_page_map: Dict[int, Dict] = {}
     if "tesseract" in use_engines and scanned_page_nums:
         if high_sensitivity:
-            tess_results = extract_text_tesseract_highsens(file_path, dpi=300)
+            tess_results = extract_text_tesseract_highsens(file_path, dpi=max(dpi, 400))
         else:
-            tess_results = extract_text_tesseract(file_path, dpi=200)
+            tess_results = extract_text_tesseract(file_path, dpi=dpi)
         for r in tess_results:
             if r["page"] in scanned_page_nums:
                 tesseract_page_map[r["page"]] = r
