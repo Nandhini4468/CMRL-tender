@@ -28,7 +28,7 @@ def apply_portal_styling():
                                 span.textContent = '❯❯';
                                 span.style.fontFamily = 'Arial, sans-serif';
                                 span.style.fontSize = '18px';
-                                span.style.color = '#ffffff';
+                                span.style.color = '#1565c0';
                                 span.style.fontWeight = '900';
                             }
                         }
