@@ -158,45 +158,75 @@ def apply_portal_styling():
             border-radius: 0 8px 8px 0 !important;
         }
 
-        /* Hide icon name text using transparent color — works even when font fails */
-        span.material-symbols-rounded,
-        span.material-symbols-outlined,
-        span.material-symbols-sharp,
-        span[class*="material-symbols"],
-        span[class*="Material"] {
+        /* ── Sidebar toggle icon fix ──
+           Target every possible selector for the header button span
+           so "keyboard_double_arrow" text is hidden and replaced with a white arrow ── */
+
+        /* Hide text in ALL spans inside the Streamlit header/toolbar buttons */
+        [data-testid="stHeader"] button span,
+        [data-testid="stHeader"] button p,
+        [data-testid="stToolbar"] button span,
+        [data-testid="stToolbar"] button p,
+        [data-testid="stBaseButton-header"] span,
+        [data-testid="baseButton-header"] span,
+        header button span,
+        header button p {
             color: transparent !important;
-            position: relative !important;
+            font-size: 0px !important;
+            letter-spacing: -999px !important;
+            overflow: hidden !important;
             display: inline-block !important;
-            width: 24px !important;
-            height: 24px !important;
-            line-height: 24px !important;
-            font-size: 20px !important;
+            width: 20px !important;
+            height: 20px !important;
+            position: relative !important;
         }
 
-        /* Show white « arrow icon on ALL material icon spans (collapse button) */
-        span.material-symbols-rounded::before,
-        span.material-symbols-outlined::before,
-        span.material-symbols-sharp::before,
-        span[class*="material-symbols"]::before,
-        span[class*="Material"]::before {
+        /* Show white « arrow via ::before on those spans */
+        [data-testid="stHeader"] button span::before,
+        [data-testid="stToolbar"] button span::before,
+        [data-testid="stBaseButton-header"] span::before,
+        [data-testid="baseButton-header"] span::before,
+        header button span::before {
             content: "«" !important;
             color: #ffffff !important;
+            font-size: 20px !important;
+            font-family: Arial, sans-serif !important;
+            font-weight: 900 !important;
+            letter-spacing: normal !important;
             position: absolute !important;
             top: 50% !important;
             left: 50% !important;
             transform: translate(-50%, -50%) !important;
-            font-size: 22px !important;
-            font-weight: 900 !important;
-            font-family: Arial, sans-serif !important;
             line-height: 1 !important;
+            display: block !important;
         }
 
-        /* Override to show white » for the expand button (sidebar collapsed) */
+        /* Expand button (when sidebar is collapsed) — show » */
+        [data-testid="collapsedControl"] span,
+        [data-testid="collapsedControl"] button span {
+            color: transparent !important;
+            font-size: 0px !important;
+            letter-spacing: -999px !important;
+            overflow: hidden !important;
+            display: inline-block !important;
+            width: 20px !important;
+            height: 20px !important;
+            position: relative !important;
+        }
         [data-testid="collapsedControl"] span::before,
-        [data-testid="collapsedControl"] span.material-symbols-rounded::before,
-        [data-testid="collapsedControl"] span[class*="material-symbols"]::before {
+        [data-testid="collapsedControl"] button span::before {
             content: "»" !important;
             color: #ffffff !important;
+            font-size: 20px !important;
+            font-family: Arial, sans-serif !important;
+            font-weight: 900 !important;
+            letter-spacing: normal !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            line-height: 1 !important;
+            display: block !important;
         }
 
         /* ── Groq API Key input — white box with blue text ── */
