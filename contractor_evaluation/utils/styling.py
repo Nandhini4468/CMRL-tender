@@ -1,17 +1,7 @@
-import base64
-import os
 import streamlit as st
 
 
 def apply_portal_styling():
-    img_path = os.path.join(os.path.dirname(__file__), "..", "..", "train photo.webp")
-    b64 = ""
-    if os.path.exists(img_path):
-        with open(img_path, "rb") as f:
-            b64 = base64.b64encode(f.read()).decode()
-
-    bg_css = f'url("data:image/webp;base64,{b64}")' if b64 else "none"
-
     st.markdown(
         f"""
         <style>
@@ -22,17 +12,14 @@ def apply_portal_styling():
             font-family: 'Inter', sans-serif !important;
         }}
 
-        /* ── Background image ── */
+        /* ── Clean white background ── */
         .stApp {{
-            background-image: {bg_css};
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-color: #ffffff;
         }}
 
-        /* ── Semi-transparent white overlay on main content (50%) ── */
+        /* ── Main content area ── */
         .main .block-container {{
-            background-color: rgba(255, 255, 255, 0.50);
+            background-color: #ffffff;
             border-radius: 12px;
             padding: 2rem 2.5rem;
         }}
