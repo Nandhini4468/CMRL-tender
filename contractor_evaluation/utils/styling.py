@@ -2,11 +2,17 @@ import streamlit as st
 
 
 def apply_portal_styling():
+    # Load Material Symbols font via <link> so sidebar arrow icons render correctly
+    st.markdown("""
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    """, unsafe_allow_html=True)
+
     st.markdown(
         """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
         /* ── Global font & background ── */
         html, body, [class*="css"], .stApp, .stMarkdown, p, li {
@@ -157,6 +163,21 @@ def apply_portal_styling():
         }
         [data-testid="collapsedControl"] svg {
             fill: #ffffff !important;
+        }
+        /* Ensure Material Symbols font is applied so icons render as glyphs not text */
+        .material-symbols-rounded {
+            font-family: 'Material Symbols Rounded' !important;
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-icons {
+            font-family: 'Material Icons' !important;
+        }
+        /* Fix any span showing icon name as text */
+        [data-testid="collapsedControl"] span,
+        button[kind="header"] span {
+            font-family: 'Material Symbols Rounded', 'Material Icons' !important;
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            color: #ffffff !important;
         }
 
         /* ── Buttons ── */
