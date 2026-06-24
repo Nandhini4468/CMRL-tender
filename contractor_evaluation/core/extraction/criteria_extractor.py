@@ -36,26 +36,27 @@ Evaluation criteria have numeric marks/scores/weights and determine how bidders 
 Look for sections titled: "Technical Evaluation", "Marking Scheme", "Scoring Criteria", "Quality and Cost Based Selection",
 "Point System", "Evaluation Criteria", or tables with columns like "Criteria", "Marks", "Weightage", "Score".
 
-Common scoring criteria in Indian government tenders:
-- Financial capability / turnover (marks based on slab)
-- Experience / past work (marks based on value or number of projects)
-- Technical capacity / manpower / equipment
-- Methodology / work plan
-- Price / financial bid score
+UNDERSTANDING NUMBERED HIERARCHIES:
+Documents use numbered sections like:
+  1.   Technical Capacity         (40 marks)  ← PARENT
+  1.1  Equipment availability     (20 marks)  ← SUB-CRITERION (leaf)
+  1.2  Manpower strength          (20 marks)  ← SUB-CRITERION (leaf)
+  2.   Financial Capacity         (60 marks)  ← PARENT
+  2.1  Annual turnover            (30 marks)  ← SUB-CRITERION (leaf)
+  2.2  Net worth                  (30 marks)  ← SUB-CRITERION (leaf)
 
-CRITICAL RULES TO AVOID OVER-COUNTING:
-1. NEVER extract both a parent criterion AND its sub-criteria. If "Technical Capacity (40 marks)" is broken into
-   "Equipment (20 marks)" and "Manpower (20 marks)", extract ONLY the sub-criteria (Equipment + Manpower), NOT the parent.
-   Extract the most granular (leaf-level) breakdown available.
-2. If the same criterion appears multiple times in the document (e.g., in a summary table and a detailed section),
-   extract it ONLY ONCE. Do NOT duplicate entries.
-3. The sum of all maximum_score values must equal the document's stated total marks (commonly 100).
-   If your extracted total exceeds the stated total, you have double-counted — remove duplicates.
-4. Do NOT include "Total" rows or summary rows as separate criteria.
+CRITICAL RULES:
+1. Always capture the criterion_number exactly as shown in the document (e.g. "1", "1.1", "2.3.1").
+2. If a criterion has sub-criteria (e.g. 1 has 1.1 and 1.2), extract ONLY the sub-criteria — NOT the parent.
+3. If a criterion has NO sub-criteria, extract it as-is.
+4. NEVER extract both a parent and its sub-criteria — this causes double-counting.
+5. If the same criterion appears in multiple places (summary + detail), extract it ONLY ONCE.
+6. Do NOT include "Total" or summary rows.
+7. The sum of all maximum_score values must equal the document's stated total.
 
 Return a valid JSON array only. No explanation, no markdown, no preamble.
 Each object must have exactly these keys:
-- sno: serial number (integer starting at 1)
+- criterion_number: the number/code as in the document, e.g. "1", "1.1", "2.3" (empty string if unnumbered)
 - criterion_description: full description of what is evaluated (string)
 - maximum_score: maximum marks/points for this criterion (number — use 0 if not specified)
 - supporting_evidence: documents/certificates needed to prove this criterion (string)
@@ -111,17 +112,47 @@ def _extract_section(llm: ChatGroq, system_prompt: str, text: str, section: str)
         if not df.empty:
             df["sno"] = range(1, len(df) + 1)
     else:
-        columns = ["sno", "criterion_description", "maximum_score", "supporting_evidence", "scoring_rules"]
-        df = pd.DataFrame(data, columns=columns) if data else pd.DataFrame(columns=columns)
+        columns = ["criterion_number", "criterion_description", "maximum_score", "supporting_evidence", "scoring_rules"]
+        df = pd.DataFrame(data) if data else pd.DataFrame(columns=columns)
+        for col in columns:
+            if col not in df.columns:
+                df[col] = "" if col in ("criterion_number", "criterion_description", "supporting_evidence", "scoring_rules") else 0
         if not df.empty:
             df["maximum_score"] = pd.to_numeric(df["maximum_score"], errors="coerce").fillna(0)
-            # Deduplicate by criterion_description (case-insensitive) — keep first occurrence
+            df["criterion_number"] = df["criterion_number"].fillna("").astype(str).str.strip()
+            # Remove parent criteria that have sub-criteria (e.g. remove "1" if "1.1" exists)
+            df = _remove_parent_criteria(df)
+            # Deduplicate by criterion_description (case-insensitive)
             df["_key"] = df["criterion_description"].str.lower().str.strip()
             df = df.drop_duplicates(subset="_key").drop(columns=["_key"])
+            df = df.reset_index(drop=True)
             df["sno"] = range(1, len(df) + 1)
             df["criteria_id"] = [f"C{i}" for i in range(1, len(df) + 1)]
 
     return df, raw_original
+
+
+def _remove_parent_criteria(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Drop any criterion whose criterion_number is a strict prefix of another criterion's number.
+    E.g. if both "1" and "1.1" exist, "1" is the parent — remove it.
+    Only applies to numbered criteria; unnumbered rows are kept as-is.
+    """
+    numbers = set(df["criterion_number"].dropna().unique())
+    numbers.discard("")
+
+    parents_to_drop = set()
+    for num in numbers:
+        for other in numbers:
+            if other != num and other.startswith(num + "."):
+                parents_to_drop.add(num)
+                break
+
+    if not parents_to_drop:
+        return df
+
+    mask = df["criterion_number"].apply(lambda n: n not in parents_to_drop)
+    return df[mask].reset_index(drop=True)
 
 
 def _clean_json_response(raw: str) -> str:
@@ -140,4 +171,6 @@ def rebuild_evaluation_df_from_edited(edited_data: list) -> pd.DataFrame:
         df["criteria_id"] = [f"C{i}" for i in range(1, len(df) + 1)]
     df["sno"] = range(1, len(df) + 1)
     df["maximum_score"] = pd.to_numeric(df.get("maximum_score", 0), errors="coerce").fillna(0)
+    if "criterion_number" not in df.columns:
+        df["criterion_number"] = ""
     return df

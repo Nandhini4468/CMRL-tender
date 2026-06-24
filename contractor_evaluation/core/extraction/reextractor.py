@@ -16,6 +16,7 @@ from core.extraction.criteria_extractor import (
     EVALUATION_SYSTEM,
     _extract_section,
     _clean_json_response,
+    _remove_parent_criteria,
 )
 
 
@@ -66,6 +67,11 @@ def reextract_criteria(
         pd.DataFrame(new_evaluation_rows) if new_evaluation_rows else pd.DataFrame(),
         key_col="criterion_description",
     )
+
+    # Remove parent criteria superseded by sub-criteria after merge
+    if "criterion_number" in merged_evaluation.columns:
+        merged_evaluation["criterion_number"] = merged_evaluation["criterion_number"].fillna("").astype(str).str.strip()
+        merged_evaluation = _remove_parent_criteria(merged_evaluation)
 
     merged_evaluation["sno"] = range(1, len(merged_evaluation) + 1)
     merged_evaluation["criteria_id"] = [f"C{i}" for i in range(1, len(merged_evaluation) + 1)]

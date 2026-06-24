@@ -29,10 +29,12 @@ with st.sidebar:
 
     engines = st.multiselect(
         "OCR Engines",
-        ["pymupdf", "tesseract"],
-        default=["pymupdf", "tesseract"],
-        help="PyMuPDF is fast for digital PDFs. Tesseract handles scanned/image pages.",
+        ["pymupdf", "tesseract", "unlimited_ocr"],
+        default=["pymupdf", "tesseract", "unlimited_ocr"],
+        help="PyMuPDF is fast for digital PDFs. Tesseract handles scanned pages. Unlimited-OCR gives best accuracy on complex scanned documents.",
     )
+    if "unlimited_ocr" in engines:
+        st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB).")
     dpi = st.slider("OCR DPI (for scanned PDFs)", 150, 600, 300, step=50)
 
 # ── Upload ───────────────────────────────────────────────────────────────────
