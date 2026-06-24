@@ -4,6 +4,33 @@ import streamlit as st
 def apply_portal_styling():
     st.markdown("""
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <script>
+        (function() {
+            function fixIconText() {
+                document.querySelectorAll('span').forEach(function(span) {
+                    if (span.childElementCount === 0) {
+                        var t = span.textContent.trim();
+                        if (t === 'keyboard_double_arrow_left' || t === 'keyboard_arrow_left') {
+                            span.textContent = '❮❮';
+                            span.style.fontFamily = 'Arial, sans-serif';
+                            span.style.fontSize = '18px';
+                            span.style.color = '#ffffff';
+                            span.style.fontWeight = '900';
+                        } else if (t === 'keyboard_double_arrow_right' || t === 'keyboard_arrow_right') {
+                            span.textContent = '❯❯';
+                            span.style.fontFamily = 'Arial, sans-serif';
+                            span.style.fontSize = '18px';
+                            span.style.color = '#ffffff';
+                            span.style.fontWeight = '900';
+                        }
+                    }
+                });
+            }
+            fixIconText();
+            var observer = new MutationObserver(fixIconText);
+            observer.observe(document.documentElement, { childList: true, subtree: true });
+        })();
+        </script>
     """, unsafe_allow_html=True)
 
     st.markdown(
