@@ -28,6 +28,14 @@ with st.sidebar:
                             help="Higher = faster for many files, but uses more CPU/RAM")
     use_cache = st.checkbox("Use OCR cache", value=True,
                             help="Skip re-processing files that were already OCR'd")
+    engines = st.multiselect(
+        "OCR Engines",
+        ["pymupdf", "tesseract", "unlimited_ocr"],
+        default=["pymupdf", "tesseract"],
+        help="unlimited_ocr = Baidu Unlimited-OCR (AI model, slower but more accurate on complex scans)",
+    )
+    if "unlimited_ocr" in engines:
+        st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB). This may take a few minutes.")
 
 # ── Input method ─────────────────────────────────────────────────────────────
 input_method = st.radio("How would you like to provide bidder documents?", [
@@ -103,6 +111,7 @@ if bidders:
                     bidder["files"],
                     TESSERACT_CMD,
                     max_workers=4,
+                    use_engines=engines,
                     progress_callback=on_file_done,
                 )
 

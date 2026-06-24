@@ -5,6 +5,7 @@ import docx
 
 from core.ocr.pymupdf_ocr import extract_text_pymupdf
 from core.ocr.tesseract_ocr import extract_text_tesseract, extract_text_tesseract_highsens, configure_tesseract
+from core.ocr.unlimited_ocr import extract_text_unlimited_ocr
 from core.ocr.ocr_cache import get_cached, save_cache
 
 # Pages with fewer characters than this are treated as scanned/image pages
@@ -64,27 +65,32 @@ def run_ocr_pipeline(
             if r["page"] in scanned_page_nums:
                 tesseract_page_map[r["page"]] = r
 
-    # Step 4: Fuse — prefer PyMuPDF for text-rich pages, Tesseract for scanned
+    # Step 3b: Run Baidu Unlimited-OCR on scanned pages (if selected)
+    unlimited_page_map: Dict[int, Dict] = {}
+    if "unlimited_ocr" in use_engines and scanned_page_nums:
+        unlimited_results = extract_text_unlimited_ocr(file_path)
+        for r in unlimited_results:
+            if r["page"] in scanned_page_nums:
+                unlimited_page_map[r["page"]] = r
+
+    # Step 4: Fuse — prefer PyMuPDF for text-rich pages, best OCR for scanned
     fused_pages = []
     for p in pymupdf_pages:
         page_num = p["page"]
+        candidates = [p]
         if page_num in tesseract_page_map:
-            tess = tesseract_page_map[page_num]
-            # Use whichever has more content
-            best = tess if len(tess.get("text", "")) > len(p.get("text", "")) else p
-            fused_pages.append({
-                "page": page_num,
-                "text": best.get("text", ""),
-                "confidence": best.get("confidence", 0.0),
-                "engine_used": best.get("engine", "tesseract"),
-            })
-        else:
-            fused_pages.append({
-                "page": page_num,
-                "text": p.get("text", ""),
-                "confidence": p.get("confidence", 95.0),
-                "engine_used": "pymupdf",
-            })
+            candidates.append(tesseract_page_map[page_num])
+        if page_num in unlimited_page_map:
+            candidates.append(unlimited_page_map[page_num])
+
+        # Pick candidate with the most extracted text
+        best = max(candidates, key=lambda x: len(x.get("text", "")))
+        fused_pages.append({
+            "page": page_num,
+            "text": best.get("text", ""),
+            "confidence": best.get("confidence", 0.0),
+            "engine_used": best.get("engine", best.get("engine_used", "pymupdf")),
+        })
 
     full_text = "\n\n".join(p["text"] for p in fused_pages if p["text"])
     avg_conf = sum(p["confidence"] for p in fused_pages) / len(fused_pages) if fused_pages else 0.0
@@ -110,6 +116,7 @@ def extract_all_bidder_docs(
     bidder_files: List[Dict],
     tesseract_cmd: str,
     max_workers: int = 4,
+    use_engines: Optional[List[str]] = None,
     progress_callback=None,
 ) -> List[Dict]:
     """
@@ -120,7 +127,7 @@ def extract_all_bidder_docs(
     completed = 0
 
     def process_file(file_info: Dict):
-        result = run_ocr_pipeline(file_info["path"], tesseract_cmd)
+        result = run_ocr_pipeline(file_info["path"], tesseract_cmd, use_engines=use_engines)
         pages = []
         for page in result["pages"]:
             pages.append({

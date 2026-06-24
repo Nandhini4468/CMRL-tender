@@ -32,3 +32,7 @@ numpy>=1.26.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
 tqdm>=4.66.0
+
+# Baidu Unlimited-OCR (HuggingFace)
+transformers>=4.40.0
+accelerate>=0.30.0
