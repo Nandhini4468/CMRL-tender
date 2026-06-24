@@ -43,6 +43,16 @@ Common scoring criteria in Indian government tenders:
 - Methodology / work plan
 - Price / financial bid score
 
+CRITICAL RULES TO AVOID OVER-COUNTING:
+1. NEVER extract both a parent criterion AND its sub-criteria. If "Technical Capacity (40 marks)" is broken into
+   "Equipment (20 marks)" and "Manpower (20 marks)", extract ONLY the sub-criteria (Equipment + Manpower), NOT the parent.
+   Extract the most granular (leaf-level) breakdown available.
+2. If the same criterion appears multiple times in the document (e.g., in a summary table and a detailed section),
+   extract it ONLY ONCE. Do NOT duplicate entries.
+3. The sum of all maximum_score values must equal the document's stated total marks (commonly 100).
+   If your extracted total exceeds the stated total, you have double-counted — remove duplicates.
+4. Do NOT include "Total" rows or summary rows as separate criteria.
+
 Return a valid JSON array only. No explanation, no markdown, no preamble.
 Each object must have exactly these keys:
 - sno: serial number (integer starting at 1)
@@ -104,9 +114,12 @@ def _extract_section(llm: ChatGroq, system_prompt: str, text: str, section: str)
         columns = ["sno", "criterion_description", "maximum_score", "supporting_evidence", "scoring_rules"]
         df = pd.DataFrame(data, columns=columns) if data else pd.DataFrame(columns=columns)
         if not df.empty:
+            df["maximum_score"] = pd.to_numeric(df["maximum_score"], errors="coerce").fillna(0)
+            # Deduplicate by criterion_description (case-insensitive) — keep first occurrence
+            df["_key"] = df["criterion_description"].str.lower().str.strip()
+            df = df.drop_duplicates(subset="_key").drop(columns=["_key"])
             df["sno"] = range(1, len(df) + 1)
             df["criteria_id"] = [f"C{i}" for i in range(1, len(df) + 1)]
-            df["maximum_score"] = pd.to_numeric(df["maximum_score"], errors="coerce").fillna(0)
 
     return df, raw_original
 

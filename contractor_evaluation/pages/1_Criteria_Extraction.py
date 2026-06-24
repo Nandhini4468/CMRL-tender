@@ -6,6 +6,7 @@ from utils.styling import apply_portal_styling
 from utils.config import GROQ_API_KEY, GROQ_MODEL, TESSERACT_CMD, OUTPUTS_DIR
 from utils.file_utils import save_uploaded_file
 from core.ocr.ocr_pipeline import run_ocr_pipeline
+from core.ocr.ocr_cache import CACHE_DIR, _file_md5
 from core.extraction.criteria_extractor import extract_criteria_from_text
 
 st.set_page_config(page_title="Step 1 — Criteria Extraction", page_icon="🚇", layout="wide")
@@ -21,19 +22,17 @@ with st.sidebar:
     if groq_key:
         st.session_state["groq_api_key"] = groq_key
     model = st.selectbox("Groq Model", [
-        "llama-3.3-70b-versatile", "llama-3.1-70b-versatile",
-        "mixtral-8x7b-32768", "llama-3.1-8b-instant",
+        "llama-3.1-8b-instant", "llama-3.3-70b-versatile", "llama-3.1-70b-versatile",
+        "mixtral-8x7b-32768",
     ], index=0)
     st.session_state["groq_model"] = model
 
     engines = st.multiselect(
         "OCR Engines",
-        ["pymupdf", "tesseract", "unlimited_ocr"],
+        ["pymupdf", "tesseract"],
         default=["pymupdf", "tesseract"],
-        help="unlimited_ocr = Baidu AI-OCR (best for scanned/complex PDFs, downloads ~1-2 GB on first use)",
+        help="PyMuPDF is fast for digital PDFs. Tesseract handles scanned/image pages.",
     )
-    if "unlimited_ocr" in engines:
-        st.info("Baidu Unlimited-OCR will download the model on first use (~1–2 GB).")
     dpi = st.slider("OCR DPI (for scanned PDFs)", 150, 600, 300, step=50)
 
 # ── Upload ───────────────────────────────────────────────────────────────────
@@ -52,6 +51,14 @@ if uploaded:
     st.session_state["criteria_pdf_path"] = file_path
 
     if st.button("Run OCR + Extract Criteria", type="primary"):
+        # ── Clear OCR cache for this file so a fresh read is always performed ──
+        try:
+            cache_file = CACHE_DIR / f"{_file_md5(file_path)}.json"
+            if cache_file.exists():
+                cache_file.unlink()
+        except Exception:
+            pass
+
         # ── OCR ─────────────────────────────────────────────────────────────
         with st.spinner("Running multi-engine OCR... this may take a minute for scanned PDFs."):
             ocr_result = run_ocr_pipeline(file_path, TESSERACT_CMD, use_engines=engines, dpi=dpi)

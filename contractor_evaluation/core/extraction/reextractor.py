@@ -80,7 +80,11 @@ def _merge_criteria(existing: pd.DataFrame, new: pd.DataFrame, key_col: str) -> 
         return existing
 
     if existing.empty:
-        return new.reset_index(drop=True)
+        # Deduplicate within the new batch itself before returning
+        deduped = new.copy()
+        deduped["_key"] = deduped[key_col].str.lower().str.strip()
+        deduped = deduped.drop_duplicates(subset="_key").drop(columns=["_key"])
+        return deduped.reset_index(drop=True)
 
     existing_keys = set(existing[key_col].str.lower().str.strip()) if key_col in existing.columns else set()
 
@@ -89,7 +93,7 @@ def _merge_criteria(existing: pd.DataFrame, new: pd.DataFrame, key_col: str) -> 
         val = str(row.get(key_col, "")).lower().strip()
         if val and val not in existing_keys:
             truly_new.append(row)
-            existing_keys.add(val)
+            existing_keys.add(val)  # prevent within-batch duplicates too
 
     if not truly_new:
         return existing
