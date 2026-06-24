@@ -2,11 +2,32 @@ import streamlit as st
 
 
 def apply_portal_styling():
-    # Load Material Symbols font via <link> so sidebar arrow icons render correctly
+    # Fix Material icon names showing as text — JS directly replaces the text content
     st.markdown("""
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <script>
+        (function() {
+            function fixIconText() {
+                document.querySelectorAll('span').forEach(function(span) {
+                    if (span.childElementCount === 0) {
+                        var t = span.textContent.trim();
+                        if (t === 'keyboard_double_arrow_left' || t === 'keyboard_arrow_left') {
+                            span.textContent = '❮❮';
+                            span.style.fontFamily = 'Arial, sans-serif';
+                            span.style.fontSize = '16px';
+                        } else if (t === 'keyboard_double_arrow_right' || t === 'keyboard_arrow_right') {
+                            span.textContent = '❯❯';
+                            span.style.fontFamily = 'Arial, sans-serif';
+                            span.style.fontSize = '16px';
+                        }
+                    }
+                });
+            }
+            fixIconText();
+            var observer = new MutationObserver(fixIconText);
+            observer.observe(document.documentElement, { childList: true, subtree: true });
+        })();
+        </script>
     """, unsafe_allow_html=True)
 
     st.markdown(
