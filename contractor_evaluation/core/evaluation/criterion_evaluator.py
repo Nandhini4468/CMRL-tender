@@ -1,6 +1,7 @@
 import json
 import re
-from typing import List, Dict
+import time
+from typing import List, Dict, Optional, Callable
 import pandas as pd
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -37,6 +38,7 @@ def evaluate_criterion(
     retriever: BidderRetriever,
     groq_api_key: str,
     model: str,
+    on_rate_limit: Optional[Callable[[str], None]] = None,
 ) -> Dict:
     """Evaluate a single criterion for a single bidder."""
     llm = ChatGroq(api_key=groq_api_key, model_name=model, temperature=0)
@@ -58,7 +60,7 @@ def evaluate_criterion(
         f"RETRIEVED EVIDENCE FROM BIDDER DOCUMENTS:\n{context}"
     )
 
-    result = _call_llm(llm, SCORING_SYSTEM, user_msg)
+    result = _call_llm(llm, SCORING_SYSTEM, user_msg, on_rate_limit=on_rate_limit)
     result["criteria_id"] = criterion.get("criteria_id", "")
     result["criterion_description"] = criterion.get("criterion_description", "")
     result["maximum_score"] = criterion.get("maximum_score", 0)
@@ -83,11 +85,14 @@ def evaluate_all_criteria(
     retriever: BidderRetriever,
     groq_api_key: str,
     model: str,
+    on_rate_limit: Optional[Callable[[str], None]] = None,
 ) -> List[Dict]:
     """Evaluate all approved criteria for one bidder."""
     results = []
-    for _, criterion in evaluation_df.iterrows():
-        result = evaluate_criterion(bidder_name, criterion, retriever, groq_api_key, model)
+    for i, (_, criterion) in enumerate(evaluation_df.iterrows()):
+        if i > 0:
+            time.sleep(2)  # proactive pacing to stay under Groq free-tier rate limits
+        result = evaluate_criterion(bidder_name, criterion, retriever, groq_api_key, model, on_rate_limit=on_rate_limit)
         results.append(result)
     return results
 
@@ -103,20 +108,45 @@ def _format_context(chunks: List[Dict]) -> str:
     return "\n\n---\n\n".join(parts)
 
 
-def _call_llm(llm: ChatGroq, system: str, user: str) -> Dict:
+def _call_llm(
+    llm: ChatGroq,
+    system: str,
+    user: str,
+    on_rate_limit: Optional[Callable[[str], None]] = None,
+) -> Dict:
     default = {
         "awarded_score": 0, "evidence_text": "", "source_file": "",
         "page": 0, "reasoning": "LLM error", "evidence_found": False,
         "retrieval_confidence": 0, "evaluation_confidence": 0,
     }
-    try:
-        messages = [SystemMessage(content=system), HumanMessage(content=user)]
-        response = llm.invoke(messages)
-        raw = response.content.strip()
-        raw = re.sub(r"```(?:json)?", "", raw).replace("```", "").strip()
-        match = re.search(r"\{.*\}", raw, re.DOTALL)
-        if match:
-            return json.loads(match.group(0))
-    except Exception:
-        pass
+    max_retries = 6
+    for attempt in range(max_retries):
+        try:
+            messages = [SystemMessage(content=system), HumanMessage(content=user)]
+            response = llm.invoke(messages)
+            raw = response.content.strip()
+            raw = re.sub(r"```(?:json)?", "", raw).replace("```", "").strip()
+            match = re.search(r"\{.*\}", raw, re.DOTALL)
+            if match:
+                return json.loads(match.group(0))
+            return default
+        except Exception as e:
+            err = str(e)
+            is_rate_limit = (
+                "429" in err
+                or "rate_limit" in err.lower()
+                or "rate limit" in err.lower()
+                or "too many requests" in err.lower()
+            )
+            if is_rate_limit and attempt < max_retries - 1:
+                wait_match = re.search(r"try again in (\d+(?:\.\d+)?)s", err, re.IGNORECASE)
+                wait_secs = float(wait_match.group(1)) + 3 if wait_match else min(30 * (attempt + 1), 120)
+                msg = f"Groq rate limit hit — waiting {wait_secs:.0f}s before retry (attempt {attempt + 1}/{max_retries - 1})..."
+                if on_rate_limit:
+                    on_rate_limit(msg)
+                else:
+                    print(msg)
+                time.sleep(wait_secs)
+                continue
+            break
     return default

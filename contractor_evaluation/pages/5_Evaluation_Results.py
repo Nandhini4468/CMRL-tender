@@ -63,13 +63,18 @@ if st.button("Run Full Evaluation", type="primary"):
     all_bidder_results = {}
     progress = st.progress(0, text="Starting evaluation...")
     status_area = st.empty()
+    rate_limit_area = st.empty()
+
+    def on_rate_limit(msg: str):
+        rate_limit_area.warning(f"⏳ {msg}")
 
     for i, bidder_name in enumerate(all_bidders):
         progress.progress(i / len(all_bidders), text=f"Evaluating {bidder_name}...")
-        status_area.info(f"Evaluating **{bidder_name}** — {len(eval_df)} criteria...")
+        status_area.info(f"Evaluating **{bidder_name}** — {len(eval_df)} criteria... (rate limits are handled automatically)")
+        rate_limit_area.empty()
 
         retriever = BidderRetriever(CHROMA_PERSIST_DIR, bidder_name, EMBEDDING_MODEL)
-        results = evaluate_all_criteria(bidder_name, eval_df, retriever, api_key, model)
+        results = evaluate_all_criteria(bidder_name, eval_df, retriever, api_key, model, on_rate_limit=on_rate_limit)
         all_bidder_results[bidder_name] = results
 
         scores = {r["criteria_id"]: r["awarded_score"] for r in results}
@@ -77,6 +82,7 @@ if st.button("Run Full Evaluation", type="primary"):
         status_area.success(f"**{bidder_name}** scored: {scores} → Total: {total}")
 
     progress.progress(1.0, text="Evaluation complete.")
+    rate_limit_area.empty()
 
     outputs = build_all_outputs(eval_df, all_bidder_results)
     st.session_state["scoring_df"] = outputs["scoring"]
